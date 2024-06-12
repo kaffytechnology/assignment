@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 // const WebSocket = require("ws");
 const socketIO = require("socket.io");
 const cors = require("cors");
+const { start } = require("repl");
 // const server_app = express();
 const app = express();
 
@@ -115,17 +116,22 @@ const verifyToken = (req, res, next) => {
 app.post("/start-eating", verifyToken, (req, res) => {
   const username = req.user.username;
   const startTime = req.body.start_time;
+  // console.log(startTime);
   const query =
     "INSERT INTO eating_sessions (username, start_time) VALUES (?, ?);";
   db.query(query, [username, startTime], (err, result) => {
     // get result as id of the database where it got inserted
-    console.log(result);
+    // console.log(result);
 
     if (err) {
       res.status(500).send("Error on the server.");
     } else {
+      // console.log(fields)
+      console.log(result.insertId);
       broadcastSessions(username);
-      res.status(200).send("Eating session started");
+      res.status(200).json({
+        'id': result.insertId,
+    });
     }
   });
 });
@@ -133,25 +139,30 @@ app.post("/start-eating", verifyToken, (req, res) => {
 // Stop Eating Route
 app.post("/stop-eating", verifyToken, (req, res) => {
   const username = req.user.username;
-  let { time_taken, start_time } = req.body;
-  start_time = new Date(start_time);
-  const year = start_time.getFullYear();
-  const month = String(start_time.getMonth() + 1).padStart(2, "0");
-  const day = String(start_time.getDate()).padStart(2, "0");
-  const hours = String(start_time.getHours()).padStart(2, "0");
-  const minutes = String(start_time.getMinutes()).padStart(2, "0");
-  const seconds = String(start_time.getSeconds()).padStart(2, "0");
+  let { time_taken, id } = req.body;
+  // console.log(start_time);
+  // console.log(typeof(start_time));
+  // start_time = new Date(start_time);
+  // // console.log(start_time);
+  // // console.log(start_time);
+  // const year = start_time.getFullYear();
+  // const month = String(start_time.getMonth() + 1).padStart(2, "0");
+  // const day = String(start_time.getDate()).padStart(2, "0");
+  // const hours = String(start_time.getHours()).padStart(2, "0");
+  // const minutes = String(start_time.getMinutes()).padStart(2, "0");
+  // const seconds = String(start_time.getSeconds()).padStart(2, "0");
 
-  const mysqlStartTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  console.log(mysqlStartTime);
+  // const mysqlStartTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  // // console.log(mysqlStartTime);
   const query =
-    "UPDATE eating_sessions SET time_taken = ? WHERE username = ? AND start_time = ?";
-  db.query(query, [time_taken, username, mysqlStartTime], (err, result) => {
+    "UPDATE eating_sessions SET time_taken = ? WHERE username = ? AND id = ?";
+  db.query(query, [time_taken, username, id], (err, result) => {
     if (err) {
       console.log(err);
       res.status(500).send("Error on the server.");
     } else {
-      console.log(result);
+      // console.log(fields);
+      // console.log(result);
       broadcastSessions(username);
       res.status(200).send("Eating session stopped");
     }
@@ -162,12 +173,12 @@ app.get("/eating-sessions", verifyToken, (req, res) => {
   const username = req.user.username;
 
   const query =
-    "SELECT start_time, time_taken FROM eating_sessions WHERE username = ?";
+    "SELECT start_time, time_taken FROM eating_sessions WHERE username = ? ORDER BY start_time DESC";
   db.query(query, [username], (err, results) => {
     if (err) {
       res.status(500).send("Error on the server.");
     } else {
-      console.log(results);
+      // console.log(results);
       res.status(200).json(results);
     }
   });
@@ -175,15 +186,18 @@ app.get("/eating-sessions", verifyToken, (req, res) => {
 
 const broadcastSessions = (username) => {
   const query =
-    "SELECT start_time, time_taken FROM eating_sessions WHERE username = ?";
+    "SELECT start_time, time_taken FROM eating_sessions WHERE username = ? ORDER BY start_time DESC";
   db.query(query, [username], (err, results) => {
     if (err) {
       console.error("Error broadcasting sessions:", err);
     } else {
       const data = JSON.stringify(results);
+      // console.log(results);
+      // console.log(typeof(results[1].start_time));
       // console.log(data);
       const socketId = clients.get(username);
-      console.log(socketId);
+      console.log(data)
+      // console.log(socketId);
       if (socketId) {
         io.to(socketId).emit("eating_sessions", data);
       }

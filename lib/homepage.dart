@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   int stopTime = 0;
   // int time_taken = 0;
   DateTime? startTime;
+  int id = 0;
   late IO.Socket socket;
   List<Map<String, dynamic>> eatingSessions = [];
 
@@ -51,7 +52,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     socket.on('eating_sessions', (data) {
-      debugPrint('Received eating sessions from WebSocket: $data');
+      debugPrint('Received eating sessions from WebSocket');
       setState(() {
         eatingSessions = (jsonDecode(data) as List)
             .map((session) => {
@@ -65,6 +66,8 @@ class _HomePageState extends State<HomePage> {
     socket.on('disconnect', (_) {
       debugPrint('Disconnected from WebSocket');
     });
+
+    _fetchEatingSessions();
     // channel = WebSocketChannel.connect(
     //   Uri.parse('ws://localhost:5501?token=$token'),
     // );
@@ -121,11 +124,22 @@ class _HomePageState extends State<HomePage> {
           'start_time': startTime!.toIso8601String(),
         }),
       );
+      final parsed_id = json.decode(response.body)["id"];
+      // final parsed_id = int.parse(responseData['id']);
+      // assert(_id is int);
+      // id = _id;
+      // debugPrint(response.body.runtimeType.toString());
+      //print datatype of response
+
+      // debugPrint(response.runtimeType.toString());
+
+      // debugPrint((response));
 
       if (response.statusCode == 200) {
         setState(() {
           isEating = true;
           seconds = 0;
+          id = parsed_id;
         });
         _startTimer();
       } else {
@@ -154,7 +168,7 @@ class _HomePageState extends State<HomePage> {
         },
         body: jsonEncode(<String, dynamic>{
           'time_taken': seconds,
-          'start_time': startTime!.toIso8601String(),
+          'id': id,
         }),
       );
 
@@ -242,6 +256,32 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+              ),
+              child: Text(
+                'Eating Sessions',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ...eatingSessions.map((session) {
+              return ListTile(
+                title: Text(
+                    'Start Time: ${session['start_time'].toLocal().toString()}'),
+                subtitle: Text('Time Taken: ${session['time_taken']} seconds'),
+              );
+            }).toList(),
+          ],
+        ),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -257,29 +297,33 @@ class _HomePageState extends State<HomePage> {
                 onPressed: _toggleEating,
                 child: Text(isEating ? 'Stop Eating' : 'Start Eating'),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
-                  textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
+                  textStyle:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: eatingSessions.length,
-                  itemBuilder: (context, index) {
-                    final session = eatingSessions[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        title: Text('Start Time: ${session['start_time']}'),
-                        subtitle: Text('Time Taken: ${session['time_taken']} seconds'),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              // SizedBox(height: 20),
+              // Expanded(
+              //   child: ListView.builder(
+              //     itemCount: eatingSessions.length,
+              //     itemBuilder: (context, index) {
+              //       final session = eatingSessions[index];
+              //       return Card(
+              //         margin: EdgeInsets.symmetric(vertical: 8.0),
+              //         child: ListTile(
+              //           title: Text(
+              //               'Start Time: ${session['start_time'].toLocal().toString()}'),
+              //           subtitle: Text(
+              //               'Time Taken: ${session['time_taken']} seconds'),
+              //         ),
+              //       );
+              //     },
+              //   ),
+              // ),
             ],
           ),
         ),
