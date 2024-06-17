@@ -73,7 +73,8 @@ class _WaterTrackerState extends State<WaterTracker> {
       appBar: AppBar(
         title: Text('Water Tracker'),
       ),
-      body: Padding(
+      body: Center(
+        child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -98,6 +99,7 @@ class _WaterTrackerState extends State<WaterTracker> {
           ],
         ),
       ),
+    ),
     );
   }
 }

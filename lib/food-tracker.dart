@@ -249,15 +249,16 @@ class _FoodTrackerState extends State<FoodTracker> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Page'),
-        actions: [
+        title: Text('Food Tracker'),
+        leading: 
           IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
+            icon: Icon(Icons.arrow_back),
+            onPressed: (){
+              Navigator.pop(context);
+            },
           ),
-        ],
       ),
-      drawer: Drawer(
+      endDrawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
