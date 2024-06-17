@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'homepage.dart';
+import 'food-tracker.dart';
 import 'login-signup.dart';
+import 'homepage.dart';
 
 class InitialScreen extends StatelessWidget {
   Future<bool> _checkLoginStatus() async {
@@ -26,7 +27,7 @@ class InitialScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else {
-                  return HomePage(token: snapshot.data!);
+                  return HomePage (token: snapshot.data!);
                 }
               },
             );

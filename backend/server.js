@@ -169,6 +169,36 @@ app.post("/stop-eating", verifyToken, (req, res) => {
   });
 });
 
+app.post('/add-water-intake', verifyToken, (req, res) => {
+  const username = req.user.username;
+
+  const query = `INSERT INTO water_intake (username, water_intake) VALUES (?, 1)
+    ON DUPLICATE KEY UPDATE water_intake = water_intake + 1`;
+  db.query(query, [username], (err, result) => {
+    if (err) {
+      res.status(500).send('Error on the server.');
+    } else {
+      res.status(200).send('Water intake added');
+    }
+  });
+});
+
+// Get Water Intake Route
+app.get('/water-intake', verifyToken, (req, res) => {
+  const username = req.user.username;
+
+  const query = 'SELECT water_intake FROM water_intake WHERE username = ?';
+  db.query(query, [username], (err, results) => {
+    if (err) {
+      res.status(500).send('Error on the server.');
+    } else if (results.length === 0) {
+      res.status(200).json({ water_intake: 0 });
+    } else {
+      res.status(200).json(results[0]);
+    }
+  });
+});
+
 app.get("/eating-sessions", verifyToken, (req, res) => {
   const username = req.user.username;
 
@@ -258,7 +288,7 @@ io.on("connection", (socket) => {
 });
 
 server.listen(5501, () => {
-  console.log("Server started on port 5500");
+  console.log("Server started on port 5501");
 });
 // app.listen(5501, () => {
 //   console.log("Socket started on port 5501");
